@@ -12,7 +12,7 @@ async fn main() -> anyhow::Result<()> {
 
     init_tracing()?;
 
-    let database = Database::new().await?;
+    let database = Database::new(&config.database_url).await?;
 
     let database = Arc::new(database);
 }
