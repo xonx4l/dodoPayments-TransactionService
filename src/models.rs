@@ -37,3 +37,39 @@ pub struct Transaction{
     pub created_at: DateTime<Utc>,
     pub updated_at: DateTime<Utc>,
 }
+
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+pub enum TransactionType {
+    Credit,
+    Debit,
+    Transfer,
+}
+
+impl std::fmt::Display for TransactionType {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self{
+             TransactionType::Credit => write!(f,"credit"),
+             TransactionType::Debit => write!(f,"debit"),
+             TransactionType::Transfer => write!(f,"transfer"),
+        }
+    }
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub enum TransactionStatus {
+    Pending,
+    Completed,
+    Failed,
+    Cancelled,
+}
+
+impl std::fmt::Display for TransactionStatus {
+    fn fmt(&mut self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self{
+             TransactionStatus::Pending => write!(f,"pending"),
+             TransactionStatus::Completed => write!(f,"Completed"),
+             TransactionStatus::Failed => write!(f,"failed"),
+             TransactionStatus::Cancelled => write!(f,"cancelled"),
+        }
+    }
+}
