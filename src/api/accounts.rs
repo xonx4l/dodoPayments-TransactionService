@@ -21,3 +21,15 @@ pub async fn get_account(
     Ok(Json(AccountResponse { account }))
 }
 
+pub async fn get_balance(
+    State((account_service, _, _)): State<(AccountService, TransactionService)>,
+    Path(account_id): Path<Uuid>,
+) -> Result<Json<BalanceResponse>> {
+    let balance = account_service.get_balance(account_id).await?;
+    Ok(Json(BalanceResponse {
+        account_id,
+        balance,
+        currency: "USD".to_string(),
+    }))
+}
+
