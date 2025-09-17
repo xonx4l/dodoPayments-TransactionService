@@ -73,3 +73,47 @@ impl std::fmt::Display for TransactionStatus {
         }
     }
 }
+
+#[derive(Debug,Deserialize, Validate)]
+pub struct CreateAccountRequest {
+    #[validate(length(min = 1, max = 255 ))]
+    pub business_name: String,
+    #[validate(email)]
+    pub email: String,
+}
+
+#[derive(Debug, Serialize)]
+pub struct CreateAccountResponse {
+    pub account: Account,
+    pub api_key: String,
+}
+
+#[derive(Debug, Serialize)]
+pub struct AccountResponse {
+    pub account: Account,
+}
+
+#[derive(Debug, Serialize)]
+pub struct BalanceResponse {
+    pub account_id: Uuid,
+    pub balance: i64,
+    pub currency: String,
+}
+
+#[derive(Debug, Deserialize, Validate)]
+pub struct CreateTransactionRequest {
+    #[validate(length(min = 1, max = 255))]
+    pub idempotency_key: Option<String>,
+    #[validate(length(min = 1, max = 20))]
+    pub r#type: String,
+    #[validate(range(min = 1))]
+    pub account: i64,
+    #[validate(length(max = 1000))]
+    pub description: Option<String>
+    pub counterparty_account_id: Option<Uuid>,
+}
+
+#[derive(Debug, Serialize)]
+pub struct TransactionResponse {
+    pub transaction: Transaction,
+}
