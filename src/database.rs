@@ -1,8 +1,8 @@
 use anyhow::Result;
-use sqlx::{PgPool,Postgres,Transaction};
+use sqlx::{PgPool, Postgres, Transaction};
 use std::sync::Arc;
 
-#[derive(Debug, Clone)] 
+#[derive(Clone)]
 pub struct Database {
     pool: Arc<PgPool>,
 }
@@ -10,12 +10,21 @@ pub struct Database {
 impl Database {
     pub async fn new(database_url: &str) -> Result<Self> {
         let pool = PgPool::connect(database_url).await?;
-        Ok(Self{
+        Ok(Self {
             pool: Arc::new(pool),
         })
-   }
+    }
 
-   pub fn pool(&self) -> &PgPool {
+    pub async fn migrate(&self) -> Result<()> {
+        sqlx::migrate!("./migrations").run(&*self.pool).await?;
+        Ok(())
+    }
+
+    pub fn pool(&self) -> &PgPool {
         &self.pool
-   }
+    }
+
+    pub async fn begin_transaction(&self) -> Result<Transaction<'_, Postgres>> {
+        Ok(self.pool.begin().await?)
+    }
 }

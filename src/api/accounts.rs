@@ -1,12 +1,17 @@
-
+use axum::{
+    extract::{Path, State},
+    response::Json,
+};
 use uuid::Uuid;
 
 use crate::{
+    error::Result,
     models::{AccountResponse, BalanceResponse, CreateAccountRequest, CreateAccountResponse},
-}
+    services::{AccountService, TransactionService, WebhookService},
+};
 
-pub async fn create_account( 
-    State((account_service, _, _)): State<(AccountService, TransactionService )>,
+pub async fn create_account(
+    State((account_service, _, _)): State<(AccountService, TransactionService, WebhookService)>,
     Json(req): Json<CreateAccountRequest>,
 ) -> Result<Json<CreateAccountResponse>> {
     let response = account_service.create_account(req).await?;
@@ -14,7 +19,7 @@ pub async fn create_account(
 }
 
 pub async fn get_account(
-    State((account_service, _, _)): State<(AccountService,TransactionService)>,
+    State((account_service, _, _)): State<(AccountService, TransactionService, WebhookService)>,
     Path(account_id): Path<Uuid>,
 ) -> Result<Json<AccountResponse>> {
     let account = account_service.get_account(account_id).await?;
@@ -22,7 +27,7 @@ pub async fn get_account(
 }
 
 pub async fn get_balance(
-    State((account_service, _, _)): State<(AccountService, TransactionService)>,
+    State((account_service, _, _)): State<(AccountService, TransactionService, WebhookService)>,
     Path(account_id): Path<Uuid>,
 ) -> Result<Json<BalanceResponse>> {
     let balance = account_service.get_balance(account_id).await?;
