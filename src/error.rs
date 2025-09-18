@@ -44,6 +44,27 @@ pub enum AppError {
 
 impl IntoResponse for AppError {
     fn into_response(self) -> Response {
-        
+        let(status, error_message) = match self {
+            AppError::AccountNotFound { .. } => (StatusCode::NOT_FOUND, self.to_string()),
+            AppError::TransactionNotFound { .. } => (StatusCode::NOT_FOUND, self.to_string()),
+            AppError::WebhookNotFound { .. } => (StatusCode::NOT_FOUND, self.to_string()),
+            AppError::InsufficientFunds { .. } => (StatusCode::BAD_REQUEST, self.to_string()),
+            AppError::InvalidApiKey => (StatusCode::UNAUTHORIZED, "Invalid API key".to_string()),
+            AppError::Validation(_) => (StatusCode::BAD_REQUEST, self.to_string()),
+            AppError::IdempotencyKeyUsed { .. } => (StatusCode::CONFLICT, self.to_string()),
+            AppError::RateLimitExceeded => (StatusCode::TOO_MANY_REQUESTS, "Rate limit exceeded".to_string()),
+            AppError::WebhookDeliveryFailed(_) => (StatusCode::BAD_GATEWAY, self.to_string()),
+            AppError::Database(_) => (StatusCode::INTERNAL_SERVER_ERROR, "Database error".to_string()),
+            AppError::Internal(_) => (StatusCode::INTERNAL_SERVER_ERROR, "Internal server error".to_string()),
+        };
+
+        let body = Json(json!({
+            "error": error_message,
+            "code": status.as_u16()
+        }));
+
+        (status, body).into_response()
     }
 }
+
+pub type Result<T> = std::result::Result<T, AppError>;
