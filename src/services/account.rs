@@ -7,33 +7,32 @@ use sha2::{Digest, Sha256};
 use std::sync::Arc;
 use uuid::Uuid;
 
-#[derive(clone)]
-pub struct AccountService{
+#[derive(Clone)]
+pub struct AccountService {
     database: Arc<Database>,
 }
 
 impl AccountService {
-    pub fn new(database: Arc<Database>) -> Self{
+    pub fn new(database: Arc<Database>) -> Self {
         Self { database }
     }
 
     pub async fn create_account(&self, req: CreateAccountRequest) -> Result<CreateAccountResponse> {
         let span = tracing::info_span!(
-            "Create Account",
+            "create_account",
             business_name = %req.business_name,
             email = %req.email
         );
-        let  _enter = span.enter();
-
+        let _enter = span.enter();
+        
         tracing::info!("Creating new account");
-
+        
         let mut tx = self.database.begin_transaction().await?;
 
-
-        let account = sqlx::query_as::<_,Account>(
+        let account = sqlx::query_as::<_, Account>(
             r#"
             INSERT INTO accounts (business_name, email)
-            VALUES ($1 , $2)
+            VALUES ($1, $2)
             RETURNING id, business_name, email, balance, created_at, updated_at
             "#,
         )
@@ -41,7 +40,6 @@ impl AccountService {
         .bind(&req.email)
         .fetch_one(&mut *tx)
         .await?;
-
 
         let api_key = Uuid::new_v4().to_string();
         let key_hash = format!("{:x}", Sha256::digest(api_key.as_bytes()));
@@ -74,7 +72,7 @@ impl AccountService {
         })
     }
 
-    pub async fn get_account(&self, account_id: Uuid ) -> Result<Account> {
+    pub async fn get_account(&self, account_id: Uuid) -> Result<Account> {
         let account = sqlx::query_as::<_, Account>(
             r#"
             SELECT id, business_name, email, balance, created_at, updated_at
@@ -142,16 +140,16 @@ impl AccountService {
             WHERE key_hash = $1 AND is_active = true
             "#,
         )
-        .bind(&Key_hash)
+        .bind(&key_hash)
         .fetch_optional(&*self.database.pool())
         .await?
-        .Ok_or(AppError::InvalidApiKey)?;
+        .ok_or(AppError::InvalidApiKey)?;
 
         sqlx::query(
             r#"
             UPDATE api_keys
             SET last_used_at = NOW()
-            WHERE Key_hash = $1
+            WHERE key_hash = $1
             "#,
         )
         .bind(&key_hash)
